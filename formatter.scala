@@ -4,10 +4,10 @@
 import cats.parse.*
 import cats.parse.Rfc5234.*
 import cats.parse.Parser.*
-import scala.collection.mutable
+import scala.collection.mutable.StringBuilder
 
 @main def main = {
-  val struct = """Inlined(None, Some(Dupal), Nil, "aaaaaa", Inlined("rec"))"""
+  val struct = """Inlined(None, Some(Dupal), Uuua(), Nil, "aaaaaa", Inlined("rec"))"""
   println(AST.parse(struct).map(_.prettyPrint).toOption.get)
 }
 
@@ -22,41 +22,46 @@ Inlined(
  */
 
 enum AST {
-  def prettyPrint: String = {
-    val newline = "\n"
-    def ident(using level: Int) = "  " * level
-    def go(ast: AST)(using identLevel: Int)(using acc: StringBuilder): StringBuilder =
-      ast match {
-        case AST.Node(name, values) =>
-          acc
-            .append(ident)
-            .append(name)
-            .append("(")
-
-            values.foreach { ast => 
-              acc.append(newline)
-              go(ast)(using identLevel + 1)
-              acc.append(", ")
-              // acc.append(newline)
-            }
-
-            values.mkString
-
-            acc
-            .append(newline)
-            .append(ident)
-            .append(")")
-        case AST.Singleton(name) =>
-          acc.append(ident).append(name)
-        case AST.Text(value)     =>
-          acc.append(ident).append('"').append(value).append('"')
-      }
-    go(this)(using 0)(using mutable.StringBuilder()).result()
-  }
-
   case Node(name: String, values: List[AST])
   case Singleton(name: String)
   case Text(value: String)
+
+  def prettyPrint: String = {
+    val newline = "\n"
+    def ident(using level: Int) = "  " * level
+    def append(values: String | Char*)(using acc: StringBuilder) = {
+      values.foreach {
+        case str: String => acc.append(str)
+        case char: Char => acc.append(char)
+      }
+      acc
+    }
+    def loop(ast: AST)(using identLevel: Int)(using acc: StringBuilder): StringBuilder =
+      ast match {
+        case AST.Node(name, values) =>
+          append(ident, name, "(")
+          values.foreach { ast =>
+            append(newline)
+            loop(ast)(using identLevel + 1)
+            append(",")
+          }
+          append(newline, ident, ")")
+
+        case AST.Singleton(name) => append(ident, name)
+        case AST.Text(value)     => append(ident, '"', value, '"')
+      }
+    loop(this)(using 0)(using StringBuilder()).result()
+  }
+
+  lazy val length: Int =
+    this match {
+      case AST.Node(name, values) =>
+        name.length() + values.map(_.length).sum + 2
+      case AST.Singleton(name) =>
+        name.length()
+      case AST.Text(value) =>
+        value.length() + 2
+    }
 }
 
 object AST {
