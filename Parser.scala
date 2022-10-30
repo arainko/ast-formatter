@@ -9,12 +9,17 @@ object Parser {
 
   private val name = alpha.rep.string
 
+  Numbers.jsonNumber
+
   private val singleton = name.map(AST.Singleton.apply)
 
   private val text =
     oneOf(alpha :: digit :: charIn(' ', '_', '$', '<', '>') :: Nil).rep0.string.with1
       .surroundedBy(dquote)
       .map(AST.Text.apply)
+
+  private val number =
+    Numbers.jsonNumber.map(AST.Number.apply)
 
   private val ast = recursive[AST] { recurse =>
     val container =
@@ -28,7 +33,7 @@ object Parser {
           AST.Node(name, Span(start, end), asts.toVector)
       }
 
-    oneOf(text :: container :: singleton :: Nil)
+    oneOf(text :: number :: container :: singleton :: Nil)
   }
 
   def parse(text: String): Either[Error, AST] = ast.parseAll(text)

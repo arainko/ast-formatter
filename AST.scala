@@ -2,6 +2,7 @@ enum AST {
   case Node(name: String, span: Span, values: Vector[AST])
   case Singleton(name: String)
   case Text(value: String)
+  case Number(value: String)
 
   lazy val length: Int =
     this match {
@@ -11,6 +12,8 @@ enum AST {
         name.length
       case AST.Text(value) =>
         value.length + 2
+      case AST.Number(value) =>
+        value.toString.length
     }
 }
 

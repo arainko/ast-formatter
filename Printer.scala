@@ -25,6 +25,7 @@ object Printer {
 
         case AST.Singleton(name) => append(ident, Str(name).overlay(Color.Cyan))
         case AST.Text(value)     => append(ident, Str(s""""$value"""").overlay(Color.Green))
+        case AST.Number(value)   => append(ident, Str(value).overlay(Color.LightMagenta))
       }
     loop(ast)(using IdentLevel.zero)(using StringBuilder()).result()
   }
