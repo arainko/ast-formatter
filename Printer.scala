@@ -6,7 +6,7 @@ object Printer {
     def loop(ast: AST)(using IdentLevel)(using StringBuilder): StringBuilder =
       ast match {
         case AST.Node(name, span, values) =>
-          if (span.length >= 40) {
+          if (span.length >= 80) {
             append(ident, name, openParen)
             values.zipWithIndex.foreach { (ast, idx) =>
               append(newline)
