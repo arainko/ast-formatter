@@ -1,5 +1,6 @@
 //> using scala "3.2.0"
 //> using lib "org.typelevel::cats-parse:0.3.7"
 //> using lib "com.lihaoyi::fansi:0.4.0"
-//> using lib "com.monovore::decline-effect:2.3.1"
+//> using lib "com.monovore::decline:2.3.1"
+//> using lib "org.typelevel::cats-effect:3.4.0-RC2"
 //> using lib "co.fs2::fs2-io:3.3.0"

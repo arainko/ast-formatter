@@ -9,8 +9,6 @@ object Parser {
 
   private val name = alpha.rep.string
 
-  Numbers.jsonNumber
-
   private val singleton = name.map(AST.Singleton.apply)
 
   private val text =

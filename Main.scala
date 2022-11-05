@@ -1,32 +1,41 @@
 import com.monovore.decline.*
-import com.monovore.decline.effect.CommandIOApp
 import cats.syntax.all.*
 import fs2.io.file.*
 import cats.effect.*
-import cats.effect.std.Console
+import cats.effect.std.*
 import cats.parse.*
 import scala.util.control.NoStackTrace
+import cats.effect.unsafe.implicits.*
+
+final class ParseException(error: Parser.Error) extends NoStackTrace {
+  override def getMessage(): String = s"Encountered error during parsing: ${error.toString()}"
+}
 
 object Main
-    extends CommandIOApp(
+    extends CommandApp(
       name = "ast-formatter",
-      header = "Formats the AST printed with Printer.TreeStructure"
-    ) {
+      header = "Formats the AST printed with Printer.TreeStructure",
+      main = {
 
-  override def main: Opts[IO[ExitCode]] =
-    Opts
-      .option[String]("filepath", "the path to the structure file", "f", "path")
-      .map(Path.apply)
-      .map(processFile)
+        val useColorFlag =
+          Opts
+            .flag("no-color", "turns off ANSI color codes in the output")
+            .orFalse
+            .map(noColor => UseColor.fromBoolean(!noColor)) // no-no-color = yes-color
 
-  private def processFile(path: Path) =
-    for {
-      contents <- Files[IO].readUtf8Lines(path).compile.string
-      ast <- IO.fromEither(AST.parse(contents).left.map(ParseException(_)))
-      _ <- Console[IO].println(Printer.print(ast))
-    } yield ExitCode.Success
+        val filepathArg = Opts.argument[String]("filepath").map(Path.apply)
 
-  private final class ParseException(error: Parser.Error) extends NoStackTrace {
-    override def getMessage(): String = s"Encountered error during parsing: ${error.toString()}"
-  }
-}
+        def processFile(path: Path, useColor: UseColor) =
+          for {
+            contents <- Files[IO].readUtf8Lines(path).compile.string
+            ast <- IO.fromEither(AST.parse(contents).leftMap(ParseException(_)))
+            useColorEnv <- Env[IO].get("NO_COLOR").map(flag => UseColor.fromBoolean(flag.isEmpty))
+            _ <- Console[IO].println(Printer.print(ast, useColor && useColorEnv))
+          } yield ()
+
+        filepathArg
+          .product(useColorFlag)
+          .map(processFile)
+          .map(_.unsafeRunSync())
+      }
+    )

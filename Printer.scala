@@ -2,8 +2,8 @@ import scala.collection.mutable.StringBuilder
 import fansi.*
 
 object Printer {
-  def print(ast: AST): String = {
-    def loop(ast: AST)(using IdentLevel)(using StringBuilder): StringBuilder =
+  def print(ast: AST, useColor: UseColor): String = {
+    def loop(ast: AST)(using IdentLevel)(using StringBuilder, UseColor): StringBuilder =
       ast match {
         case AST.Node(name, span, values) =>
           if (span.length >= 80) {
@@ -23,11 +23,11 @@ object Printer {
             append(closeParen)
           }
 
-        case AST.Singleton(name) => append(ident, Str(name).overlay(Color.Cyan))
-        case AST.Text(value)     => append(ident, Str(s""""$value"""").overlay(Color.Green))
-        case AST.Number(value)   => append(ident, Str(value).overlay(Color.LightMagenta))
+        case AST.Singleton(name) => append(ident, Colorful(name, Color.Cyan))
+        case AST.Text(value)     => append(ident, Colorful(s""""$value"""", Color.Green))
+        case AST.Number(value)   => append(ident, Colorful(value, Color.LightMagenta))
       }
-    loop(ast)(using IdentLevel.zero)(using StringBuilder()).result()
+    loop(ast)(using IdentLevel.zero)(using StringBuilder(), useColor).result()
   }
 
   private val newline = System.lineSeparator()
@@ -36,15 +36,14 @@ object Printer {
 
   private def ident(using level: IdentLevel) = "  " * level.value
 
-  private def append(values: String | Char | Str*)(using acc: StringBuilder) = {
+  private def append(values: String | Char*)(using acc: StringBuilder) = {
     values.foreach {
       case str: String => acc.append(str)
       case char: Char  => acc.append(char)
-      case str: Str    => acc.append(str.render)
     }
     acc
   }
 
-  private def appendWhen(cond: Boolean)(values: String | Char | Str*)(using acc: StringBuilder) =
+  private def appendWhen(cond: Boolean)(values: String | Char*)(using acc: StringBuilder) =
     if (cond) append(values*) else acc
 }
