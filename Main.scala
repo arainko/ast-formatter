@@ -19,7 +19,10 @@ object Main
 
         val useColorFlag =
           Opts
-            .flag("no-color", "turns off ANSI color codes in the output")
+            .flag(
+              long = "no-color",
+              help = "turns off ANSI color codes in the output, you can also set the NO_COLOR env var to achieve the same effect"
+            )
             .orFalse
             .map(noColor => UseColor.fromBoolean(!noColor)) // no-no-color = yes-color
 

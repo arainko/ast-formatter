@@ -3,36 +3,39 @@ import fansi.*
 
 object Printer {
   def print(ast: AST, useColor: UseColor): String = {
-    def loop(ast: AST)(using IdentLevel)(using StringBuilder, UseColor): StringBuilder =
+    def loop(ast: AST)(using IdentLevel, Depth)(using StringBuilder, UseColor): StringBuilder =
       ast match {
         case AST.Node(name, span, values) =>
+          val color = Colorful.Hue(Depth.current)
+          val openParen = Colorful(plainOpenParen, color, Bold.On)
+          val closeParen = Colorful(plainCloseParen, color, Bold.On)
           if (span.length >= 80) {
             append(ident, name, openParen)
             values.zipWithIndex.foreach { (ast, idx) =>
               append(newline)
-              loop(ast)(using IdentLevel.current + 1)
+              loop(ast)(using IdentLevel.current + 1, Depth.current + 1)
               appendWhen(idx < values.size - 1)(", ")
             }
             append(newline, ident, closeParen)
           } else {
             append(ident, name, openParen)
             values.zipWithIndex.foreach { (ast, idx) =>
-              loop(ast)(using IdentLevel.zero)
+              loop(ast)(using IdentLevel.zero, Depth.current + 1)
               appendWhen(idx < values.size - 1)(", ")
             }
             append(closeParen)
           }
 
-        case AST.Singleton(name) => append(ident, Colorful(name, Color.Cyan))
+        case AST.Singleton(name) => append(ident, Colorful(name, Color.LightRed))
         case AST.Text(value)     => append(ident, Colorful(s""""$value"""", Color.Green))
         case AST.Number(value)   => append(ident, Colorful(value, Color.LightMagenta))
       }
-    loop(ast)(using IdentLevel.zero)(using StringBuilder(), useColor).result()
+    loop(ast)(using IdentLevel.zero, Depth.zero)(using StringBuilder(), useColor).result()
   }
 
   private val newline = System.lineSeparator()
-  private val openParen = "("
-  private val closeParen = ")"
+  private val plainOpenParen = "("
+  private val plainCloseParen = ")"
 
   private def ident(using level: IdentLevel) = "  " * level.value
 
