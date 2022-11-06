@@ -8,7 +8,7 @@ import scala.util.control.NoStackTrace
 import cats.effect.unsafe.implicits.*
 
 final class ParseException(error: Parser.Error) extends NoStackTrace {
-  override def getMessage(): String = s"Encountered error during parsing: ${error.toString()}"
+  override def getMessage(): String = show"Encountered error during parsing: ${error}"
 }
 
 object Main
@@ -39,6 +39,6 @@ object Main
         filepathArg
           .product(useColorFlag)
           .map(processFile)
-          .map(_.unsafeRunSync())
+          .map(_.onError(err => Console[IO].errorln(s"Encountered error: $err")).unsafeRunAndForget())
       }
     )

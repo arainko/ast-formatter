@@ -1,0 +1,28 @@
+on: [push]
+
+jobs:
+  list-scala-files:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: set-matrix
+        run: echo "::set-output name=matrix::$(ls *.scala | jq -R -s -c 'split("\n")[:-1]')"
+  gist-sync:
+    needs: list-scala-files
+    name: gist-sync
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{ fromJson(needs.list-scala-files.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: exuanbo/actions-deploy-gist@v1
+        id: sync
+        with:
+          token: ${{ secrets.TOKEN }}
+          gist_id: 70c3a59e5ee8d36b926dfb386567f9af
+          file_path: ${{ matrix.file }}
+          file_type: text
