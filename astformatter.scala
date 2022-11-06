@@ -15,7 +15,7 @@ final class ParseException(error: Parser.Error) extends NoStackTrace {
 
 object astformatter
     extends CommandIOApp(
-      name = "ast-formatter",
+      name = "astformatter",
       header = "Formats the AST printed with Printer.TreeStructure"
     ) {
   override def main: Opts[IO[ExitCode]] = {
