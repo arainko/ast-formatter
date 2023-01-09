@@ -12,7 +12,7 @@ object Parser {
   private val singleton = name.map(AST.Singleton.apply)
 
   private val text =
-    oneOf(alpha :: digit :: charIn(' ', '_', '$', '<', '>') :: Nil).rep0.string.with1
+    oneOf(alpha :: digit :: charIn(' ', '_', '$', '<', '>', '-') :: Nil).rep0.string.with1
       .surroundedBy(dquote)
       .map(AST.Text.apply)
 

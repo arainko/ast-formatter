@@ -10,7 +10,7 @@ import com.monovore.decline.effect.CommandIOApp
 import cats.data.Validated
 
 final class ParseException(error: Parser.Error) extends NoStackTrace {
-  override def getMessage(): String = show"Encountered error during parsing: ${error}"
+  override def getMessage(): String = show"""Encountered error during parsing (offset: ${error.failedAtOffset}): ${error}"""
 }
 
 object astformatter
